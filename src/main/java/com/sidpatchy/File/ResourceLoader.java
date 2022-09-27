@@ -1,4 +1,4 @@
-package com.sidpoatchy.File;
+package com.sidpatchy.File;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
