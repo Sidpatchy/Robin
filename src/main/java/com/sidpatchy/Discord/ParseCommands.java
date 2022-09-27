@@ -14,16 +14,16 @@ import java.util.*;
  */
 public class ParseCommands {
 
-    private static final Logger logger = LogManager.getLogger();
+    private final Logger logger = LogManager.getLogger();
     static ConfigReader config = new ConfigReader();
-    private static String commandsFile;
+    private final String commandsFile;
 
     public ParseCommands(String commandsFile) {
-        ParseCommands.commandsFile = commandsFile;
+        this.commandsFile = commandsFile;
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> getCommand(String command) {
+    private Map<String, Object> getCommand(String command) {
         try {
             Map<String , Object> obj = (Map<String, Object>) config.getObj(commandsFile, "commands");
             return (Map<String, Object>) obj.get(command);
@@ -35,19 +35,19 @@ public class ParseCommands {
         }
     }
 
-    public static String getCommandName(String command) {
+    public String getCommandName(String command) {
         return (String) Objects.requireNonNull(getCommand(command)).get("name");
     }
 
-    public static String getCommandUsage(String command) {
+    public String getCommandUsage(String command) {
         return (String) Objects.requireNonNull(getCommand(command)).get("usage");
     }
 
-    public static String getCommandHelp(String command) {
+    public String getCommandHelp(String command) {
         return (String) Objects.requireNonNull(getCommand(command)).get("help");
     }
 
-    public static HashMap<String, String> get(String command) {
+    public HashMap<String, String> get(String command) {
         return new HashMap<String, String>() {{
             put("name", getCommandName(command));
             put("usage", getCommandUsage(command));
