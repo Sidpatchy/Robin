@@ -3,7 +3,7 @@ plugins {
     id 'java'
 }
 
-group 'com.sidpoatchy'
+group 'com.sidpatchy'
 version '1.0-SNAPSHOT'
 
 repositories {
