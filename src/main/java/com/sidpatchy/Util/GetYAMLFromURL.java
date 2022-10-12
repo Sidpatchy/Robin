@@ -16,7 +16,7 @@ public class GetYAMLFromURL {
     private static final Logger logger = LogManager.getLogger();
 
     @SuppressWarnings("unchecked")
-    public List<String> readYAMLFromURL(String link) {
+    public Map<String, Object> getYAMLFromURL(String link) {
         URL url = null;
         InputStreamReader reader = null;
         try {
@@ -27,8 +27,6 @@ public class GetYAMLFromURL {
             logger.error("Unable to read from " + link);
         }
 
-        Map<String, Object> document = yaml.load(reader);
-
-        return (List<String>) document.get("domains");
+        return yaml.load(reader);
     }
 }
