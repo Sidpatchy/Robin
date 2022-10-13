@@ -1,4 +1,4 @@
-package com.sidpatchy.Util;
+package com.sidpatchy.Robin.Util;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -9,7 +9,6 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Base64;
-import java.util.List;
 import java.util.Map;
 
 public class GetYAMLFromURL {
@@ -18,7 +17,7 @@ public class GetYAMLFromURL {
     private static final Logger logger = LogManager.getLogger();
 
     @SuppressWarnings("unchecked")
-    public Map<String, Object> getYAMLFromURL(String link) {
+    public Map<String, Object> getYAMLFromURL(String link) throws IOException {
         URL url = null;
         InputStreamReader reader = null;
         try {
@@ -27,6 +26,7 @@ public class GetYAMLFromURL {
         } catch (IOException e) {
             logger.error(e.getStackTrace());
             logger.error("Unable to read from " + link);
+            throw new IOException("Failed GET from " + link);
         }
 
         return yaml.load(reader);
@@ -40,7 +40,7 @@ public class GetYAMLFromURL {
      * @param link
      * @return
      */
-    public Map<String, Object> getYAMLFromURL(String username, String password, String link) {
+    public Map<String, Object> getYAMLFromURL(String username, String password, String link) throws IOException{
         URL url = null;
         InputStreamReader reader = null;
         try {
@@ -53,6 +53,7 @@ public class GetYAMLFromURL {
         } catch (IOException e) {
             logger.error(e.getStackTrace());
             logger.error("Unable to read from " + link);
+            throw new IOException("Failed GET from " + link);
         }
 
         return yaml.load(reader);

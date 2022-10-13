@@ -1,7 +1,7 @@
-package com.sidpatchy.Discord;
+package com.sidpatchy.Robin.Discord;
 
 
-import com.sidpatchy.File.ConfigReader;
+import com.sidpatchy.Robin.File.ConfigReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
