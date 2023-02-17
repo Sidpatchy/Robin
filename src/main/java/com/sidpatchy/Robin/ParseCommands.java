@@ -48,7 +48,11 @@ public class ParseCommands {
     }
 
     public String getCommandOverview(String command) {
-        return (String) Objects.requireNonNull(getCommand(command)).get("overview");
+        String overview = (String) Objects.requireNonNull(getCommand(command)).get("overview");
+        if (overview.equalsIgnoreCase("")) {
+            overview = getCommandHelp(command);
+        }
+        return overview;
     }
 
     public HashMap<String, String> get(String command) {
