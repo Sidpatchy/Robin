@@ -47,11 +47,16 @@ public class ParseCommands {
         return (String) Objects.requireNonNull(getCommand(command)).get("help");
     }
 
+    public String getCommandOverview(String command) {
+        return (String) Objects.requireNonNull(getCommand(command)).get("overview");
+    }
+
     public HashMap<String, String> get(String command) {
         return new HashMap<String, String>() {{
             put("name", getCommandName(command));
             put("usage", getCommandUsage(command));
             put("help", getCommandHelp(command));
+            put("overview", getCommandOverview(command));
         }};
     }
 }
