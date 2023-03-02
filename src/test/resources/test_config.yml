@@ -1,0 +1,12 @@
+a-field: 12345
+a-nested-field:
+  a: the first letter
+  b: the second letter
+  c: the fourth letter
+a-double-nested-field:
+  a:
+    position: 0
+    pronunciation: ey
+  b:
+    position: 1
+    pronunciation: bee

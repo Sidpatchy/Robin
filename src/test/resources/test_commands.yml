@@ -1,0 +1,27 @@
+commands:
+  a-nested-command:
+    name: "a-nested-command"
+    usage: "/a-nested-command"
+    help: "A nested command that does things."
+    overview: ""
+
+  b-nested-command:
+    name: "b-nested-command"
+    usage: "/b-nested-command"
+    help: "B nested command that does things."
+    overview: "B nested command is extremely useful!"
+
+a-command:
+  name: "a-command"
+  usage: "/a-command"
+  help: "A command that does things."
+  overview: ""
+
+b-command:
+  name: "b-command"
+  usage: "/b-command"
+  help: "B command that does things."
+  overview: "B command is extremely useful!"
+
+# Do not change this, this is automatically changed if needed
+config-revision: 1.1
