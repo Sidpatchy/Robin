@@ -19,7 +19,7 @@ public class RobinConfiguration {
     private String fileName;
 
     private Yaml yaml = new Yaml();
-    private static final Logger logger = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger(RobinConfiguration.class);
 
     /**
      * Construct a new RobinConfiguration with a file
@@ -237,7 +237,7 @@ public class RobinConfiguration {
 
     /**
      * Returns a RobinSection for the root of the YAML file.
-     * @return
+     * @return a RobinSection for the root of the YAML file.
      */
     public RobinSection getRobinSection() {
         return data;
