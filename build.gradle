@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'com.sidpatchy'
-version '2.1.1'
+version '2.1.2'
 
 repositories {
     mavenCentral()
@@ -17,7 +17,10 @@ dependencies {
     implementation 'org.apache.logging.log4j:log4j-api:2.19.0'
     implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
 
+    // Eventually SnakeYAML will be entirely moved away from
     implementation 'org.yaml:snakeyaml:2.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.16.1'
 }
 
 test {
