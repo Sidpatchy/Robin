@@ -13,6 +13,7 @@ import java.util.*;
  *
  * @author Sidpatchy
  */
+@Deprecated
 public class ParseCommands {
 
     private final Logger logger = LogManager.getLogger();
@@ -25,6 +26,7 @@ public class ParseCommands {
      *
      * @param commandsFile path to the commands file
      */
+    @Deprecated
     public ParseCommands(String commandsFile) {
         this.commandsFile = commandsFile;
         config = new RobinConfiguration(commandsFile);
@@ -42,6 +44,7 @@ public class ParseCommands {
      * @param commandsFile path to the commands file
      * @param sectionName name of the section within the commands file
      */
+    @Deprecated
     public ParseCommands(String commandsFile, String sectionName) {
         this.commandsFile = commandsFile;
         config = new RobinConfiguration(commandsFile);
@@ -58,11 +61,13 @@ public class ParseCommands {
      *
      * @param section the RobinSection.
      */
+    @Deprecated
     public ParseCommands(RobinConfiguration.RobinSection section) {
         commandsFile = "";
         this.section = section;
     }
 
+    @Deprecated
     private RobinConfiguration.RobinSection getCommand(String command) {
         try {
             return section.getSection(command);
@@ -80,18 +85,22 @@ public class ParseCommands {
      * @param command
      * @return
      */
+    @Deprecated
     public String getCommandName(String command) {
         return (String) Objects.requireNonNull(getCommand(command)).getString("name");
     }
 
+    @Deprecated
     public String getCommandUsage(String command) {
         return (String) Objects.requireNonNull(getCommand(command)).getString("usage");
     }
 
+    @Deprecated
     public String getCommandHelp(String command) {
         return Objects.requireNonNull(getCommand(command)).getString("help");
     }
 
+    @Deprecated
     public String getCommandOverview(String command) {
         String overview = (String) Objects.requireNonNull(getCommand(command)).getString("overview");
         if (overview.equalsIgnoreCase("")) {
@@ -100,10 +109,12 @@ public class ParseCommands {
         return overview;
     }
 
+    @Deprecated
     public String getCustomField(String command, String field) {
         return Objects.requireNonNull(getCommand(command)).getString(field);
     }
 
+    @Deprecated
     public HashMap<String, String> get(String command) {
         return new HashMap<String, String>() {{
             put("name", getCommandName(command));
