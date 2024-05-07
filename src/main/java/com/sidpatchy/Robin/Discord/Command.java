@@ -20,7 +20,7 @@ public class Command {
      *
      * @param name the name of the command
      */
-    protected void setName(String name) {
+    public void setName(String name) {
         this.name = name;
     }
 
@@ -38,7 +38,7 @@ public class Command {
      *
      * @param usage the usage string
      */
-    protected void setUsage(String usage) {
+    public void setUsage(String usage) {
         this.usage = usage;
     }
 
@@ -56,7 +56,7 @@ public class Command {
      *
      * @param help The help text to set.
      */
-    protected void setHelp(String help) {
+    public void setHelp(String help) {
         this.help = help;
     }
 
@@ -74,7 +74,7 @@ public class Command {
      *
      * @param overview the overview to be set for the command
      */
-    protected void setOverview(String overview) {
+    public void setOverview(String overview) {
         this.overview = overview;
     }
 }
