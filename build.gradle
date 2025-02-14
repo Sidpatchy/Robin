@@ -1,10 +1,11 @@
 plugins {
     id 'com.github.johnrengelman.shadow' version '7.1.2'
     id 'java'
+    id 'maven-publish'
 }
 
 group 'com.sidpatchy'
-version '2.2.0'
+version '2.2.1'
 
 repositories {
     mavenCentral()
@@ -25,6 +26,20 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            // Publish both regular JAR and shadow JAR
+            artifact shadowJar // Fat JAR with dependencies
+            artifact jar       // Standard JAR
+
+            groupId = project.group
+            artifactId = 'Robin'
+            version = project.version
+        }
+    }
 }
 
 shadowJar.dependsOn(test)

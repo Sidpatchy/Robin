@@ -16,8 +16,9 @@ import java.util.List;
 import java.util.Map;
 
 public class RobinConfiguration {
-    private static RobinSection data;
+    private RobinSection data;
     private String fileName;
+
     private Yaml yaml = new Yaml();
     private static final Logger logger = LogManager.getLogger(RobinConfiguration.class);
 
@@ -41,17 +42,23 @@ public class RobinConfiguration {
         this.fileName = null;
     }
 
-
     /**
      * Load the config file from the hard drive.
      */
     public void load() throws InvalidConfigurationException {
-        if (fileName == null) throw new InvalidConfigurationException("File must be specified");
+        if (fileName == null) {
+            throw new InvalidConfigurationException("A file must be specified");
+        }
 
-        try (FileInputStream fis = new FileInputStream(fileName)) {
-            data = new RobinSection(yaml.load(fis));
-        } catch (IOException | YAMLException e) {
-            handleLoadError(e);
+        try (FileInputStream fileInputStream = new FileInputStream(fileName)) {
+            data = new RobinSection(yaml.load(fileInputStream));
+        }
+        catch (YAMLException e) {
+            throw new InvalidConfigurationException(e);
+        }
+        catch (IOException e) {
+            logger.error(e);
+            throw new InvalidConfigurationException("I/O error encountered while loading file: " + fileName, e);
         }
     }
 
@@ -62,8 +69,16 @@ public class RobinConfiguration {
      * @throws InvalidConfigurationException
      */
     public void loadFromString(String contents) throws InvalidConfigurationException {
-        if (contents == null) throw new InvalidConfigurationException("Contents cannot be null");
-        data = new RobinSection(yaml.load(contents));
+        if (contents == null) {
+            throw new InvalidConfigurationException("Contents cannot be null");
+        }
+
+        try {
+            data = new RobinSection(yaml.load(contents));
+        }
+        catch (YAMLException e) {
+            throw new InvalidConfigurationException(e);
+        }
     }
 
     /**
@@ -74,10 +89,22 @@ public class RobinConfiguration {
      * @throws InvalidConfigurationException thrown if the YAML file is invalid.
      */
     public void loadFromURL(String link) throws IOException, InvalidConfigurationException {
-        URLConnection connection = new URL(link).openConnection();
-        try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
+        URL url;
+        InputStreamReader reader = null;
+        try {
+            url = new URL(link);
+            reader = new InputStreamReader(url.openStream());
+
             data = new RobinSection(yaml.load(reader));
+        } catch (IOException e) {
+            logger.error(e);
+            logger.error("Unable to read from " + link);
+            throw new IOException("Failed GET from " + link);
         }
+        catch (YAMLException e) {
+            throw new InvalidConfigurationException(e);
+        }
+
     }
 
     /**
@@ -90,32 +117,56 @@ public class RobinConfiguration {
      * @throws InvalidConfigurationException thrown if the YAML file is invalid.
      */
     public void loadFromURL(String username, String password, String link) throws IOException, InvalidConfigurationException {
-        URLConnection connection = new URL(link).openConnection();
-        String auth = "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes());
-        connection.setRequestProperty("Authorization", auth);
+        URL url;
+        InputStreamReader reader;
+        try {
+            url = new URL(link);
+            URLConnection uc = url.openConnection();
+            String userpass = username + ":" + password;
+            String basicAuth = "Basic " + new String(Base64.getEncoder().encode(userpass.getBytes()));
+            uc.setRequestProperty("Authorization", basicAuth);
+            reader = new InputStreamReader(uc.getInputStream());
 
-        try (InputStreamReader reader = new InputStreamReader(connection.getInputStream())) {
             data = new RobinSection(yaml.load(reader));
+        }
+        catch (IOException e) {
+            logger.error(e);
+            logger.error("Unable to read from " + link);
+            throw new IOException("Failed GET from " + link);
+        }
+        catch (YAMLException e) {
+            throw new InvalidConfigurationException(e);
         }
     }
 
     public void saveToFile() throws IOException, InvalidConfigurationException {
-        if (fileName == null) throw new InvalidConfigurationException("File must be specified");
-
-        DumperOptions options = new DumperOptions();
-        options.setPrettyFlow(true);
-        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-
-        try (FileWriter writer = new FileWriter(fileName)) {
-            new Yaml(options).dump(data.getSectionData(), writer);
+        if (fileName == null) {
+            throw new InvalidConfigurationException("A file must be specified");
         }
+
+        // Create DumperOptions with the required settings
+        DumperOptions dumperOptions = new DumperOptions();
+        dumperOptions.setPrettyFlow(true);
+        dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+
+        FileWriter writer = new FileWriter(fileName);
+        Yaml yaml = new Yaml(dumperOptions);
+        yaml.dump(data.getSectionData(), writer);
+        writer.close();
     }
 
     public String saveToString() {
-        return yaml.dump(data.getSectionData());
+        StringWriter writer = new StringWriter();
+        yaml.dump(data.sectionData, writer);
+        return writer.toString();
     }
 
-    // Configuration access methods
+    /**
+     * Calls RobinSection.getString() on the root of the YAML file.
+     *
+     * @param parameter parameter to get from the YAML file.
+     * @return value of parameter if present.
+     */
     public String getString(String parameter) {
         return data.getString(parameter);
     }
@@ -190,18 +241,18 @@ public class RobinConfiguration {
         data.set(parameter, value);
     }
 
-    private void handleLoadError(Exception e) throws InvalidConfigurationException {
-        if (e instanceof YAMLException) {
-            throw new InvalidConfigurationException("YAML syntax error", e);
-        }
-        logger.error("Configuration load error", e);
-        throw new InvalidConfigurationException("Failed to load configuration", e);
+    /**
+     * Returns a RobinSection for the root of the YAML file.
+     * @return a RobinSection for the root of the YAML file.
+     */
+    public RobinSection getRobinSection() {
+        return data;
     }
 
     public static class RobinSection {
-        private Map<String, Object> sectionData;
+        private final Map<String, Object> sectionData;
 
-        // Traversal helper class
+        // Traversal helper classes
         private static class TraversalResult {
             final Map<String, Object> parentMap;
             final String lastKey;
@@ -212,24 +263,64 @@ public class RobinConfiguration {
             }
         }
 
+        private static class SetTraversalResult {
+            final Map<String, Object> targetMap;
+            final String lastKey;
+
+            SetTraversalResult(Map<String, Object> targetMap, String lastKey) {
+                this.targetMap = targetMap;
+                this.lastKey = lastKey;
+            }
+        }
+
+        /**
+         * Constructs a new RobinSection
+         * @param sectionData Map of YAML file / parent Section
+         */
         public RobinSection(Map<String, Object> sectionData) {
             this.sectionData = sectionData != null ? sectionData : new HashMap<>();
         }
 
-        // Core traversal logic
-        private TraversalResult traversePath(String parameter) {
-            if (parameter == null || parameter.isEmpty()) return null;
+        // Centralized traversal logic
+        private TraversalResult traverseGetPath(String parameter) {
+            if (parameter == null || parameter.isEmpty()) {
+                return null;
+            }
 
             String[] parts = parameter.split("\\.");
             Map<String, Object> currentMap = sectionData;
 
             for (int i = 0; i < parts.length - 1; i++) {
                 Object next = currentMap.get(parts[i]);
-                if (!(next instanceof Map)) return null;
+
+                if (!(next instanceof Map)) {
+                    return null;
+                }
+
+                // Safe cast after instanceof check
                 currentMap = (Map<String, Object>) next;
             }
 
             return new TraversalResult(currentMap, parts[parts.length - 1]);
+        }
+
+        @SuppressWarnings("unchecked")
+        private SetTraversalResult traverseSetPath(String parameter) {
+            if (parameter == null || parameter.isEmpty()) {
+                return null;
+            }
+
+            String[] parts = parameter.split("\\.");
+            Map<String, Object> currentMap = sectionData;
+
+            for (int i = 0; i < parts.length - 1; i++) {
+                currentMap = (Map<String, Object>) currentMap.computeIfAbsent(
+                        parts[i],
+                        k -> new HashMap<>()
+                );
+            }
+
+            return new SetTraversalResult(currentMap, parts[parts.length - 1]);
         }
 
         /**
@@ -239,8 +330,11 @@ public class RobinConfiguration {
          * @return Value if parameter exists
          */
         public String getString(String parameter) {
-            TraversalResult result = traversePath(parameter);
-            return result != null ? (String) result.parentMap.get(result.lastKey) : null;
+            TraversalResult result = traverseGetPath(parameter);
+            if (result == null) return null;
+
+            Object value = result.parentMap.get(result.lastKey);
+            return value instanceof String ? (String) value : null;
         }
 
         /**
@@ -250,25 +344,46 @@ public class RobinConfiguration {
          * @return Value if parameter exists
          */
         public Integer getInt(String parameter) {
-            TraversalResult result = traversePath(parameter);
-            return result != null ? (Integer) result.parentMap.get(result.lastKey) : null;
+            TraversalResult result = traverseGetPath(parameter);
+            if (result == null) return null;
+
+            Object value = result.parentMap.get(result.lastKey);
+            return value instanceof Integer ? (Integer) value : null;
         }
 
         /**
-         * Gets a Float from the specified location.
+         * Gets a float from the specified location.
          *
-         * @param parameter the path to the Float.
+         * @param parameter the path to the long.
          * @return Value if parameter exists
          */
         public Float getFloat(String parameter) {
-            TraversalResult result = traversePath(parameter);
+            TraversalResult result = traverseGetPath(parameter);
             if (result == null) return null;
 
             Object value = result.parentMap.get(result.lastKey);
             try {
-                return value instanceof Number ? ((Number) value).floatValue() : Float.parseFloat(value.toString());
+                return Float.parseFloat(value.toString());
             } catch (NumberFormatException e) {
                 return null;
+            }
+        }
+
+        /**
+         * Gets a float from the specified location.
+         *
+         * @param parameter the path to the long.
+         * @return Value if parameter exists
+         */
+        public long getLong(String parameter) {
+            TraversalResult result = traverseGetPath(parameter);
+            if (result == null) return Long.MIN_VALUE;
+
+            Object value = result.parentMap.get(result.lastKey);
+            try {
+                return (long) value;
+            } catch (NumberFormatException e) {
+                return Long.MIN_VALUE;
             }
         }
 
@@ -278,10 +393,37 @@ public class RobinConfiguration {
          * @param parameter the path to the List.
          * @return Value if parameter exists
          */
-        @SuppressWarnings("unchecked")
         public List<Object> getList(String parameter) {
-            TraversalResult result = traversePath(parameter);
-            return result != null ? (List<Object>) result.parentMap.get(result.lastKey) : null;
+            TraversalResult result = traverseGetPath(parameter);
+            if (result == null) return null;
+
+            Object value = result.parentMap.get(result.lastKey);
+            return value instanceof List ? (List<Object>) value : null;
+        }
+
+        /**
+         * Gets an Object from the specified location.
+         *
+         * @param parameter the path to the Object.
+         * @return Value if parameter exists
+         */
+        public Object getObj(String parameter) {
+            TraversalResult result = traverseGetPath(parameter);
+            return result != null ? result.parentMap.get(result.lastKey) : null;
+        }
+
+        /**
+         * Sets the value of the specified parameter. Overwrites any existing values.
+         * Running this will discard all comments in the file!
+         *
+         * @param parameter the path to the object you'd like to update.
+         * @param value new value
+         */
+        public void set(String parameter, Object value) {
+            SetTraversalResult result = traverseSetPath(parameter);
+            if (result != null) {
+                result.targetMap.put(result.lastKey, value);
+            }
         }
 
         /**
@@ -303,24 +445,17 @@ public class RobinConfiguration {
                 }
                 currentMap = (Map<String, Object>) next;
             }
+
             return new RobinSection(currentMap);
         }
 
-        // Setter with automatic map creation
-        public void set(String parameter, Object value) {
-            String[] parts = parameter.split("\\.");
-            Map<String, Object> currentMap = sectionData;
-
-            for (int i = 0; i < parts.length - 1; i++) {
-                currentMap = (Map<String, Object>) currentMap.computeIfAbsent(
-                        parts[i],
-                        k -> new HashMap<>()
-                );
-            }
-
-            currentMap.put(parts[parts.length - 1], value);
-        }
-
+        /**
+         * Converts the RobinSection back into a Map for a serializer to use.
+         * <p>
+         * You probably don't need to use this.
+         *
+         * @return map for serializer.
+         */
         public Map<String, Object> getSectionData() {
             return sectionData;
         }
