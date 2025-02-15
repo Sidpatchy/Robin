@@ -95,7 +95,7 @@ class RobinConfigurationTest {
     @Test
     void getList() throws InvalidConfigurationException {
         config.loadFromString("test:\n  - item1\n  - item2\n  - item3");
-        List<Object> list = config.getList("test");
+        List<String> list = config.getList("test", String.class);
         assertEquals(3, list.size());
         assertEquals("item1", list.get(0));
         assertEquals("item2", list.get(1));

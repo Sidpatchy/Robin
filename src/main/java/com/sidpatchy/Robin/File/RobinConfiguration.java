@@ -10,10 +10,8 @@ import org.yaml.snakeyaml.error.YAMLException;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class RobinConfiguration {
     private RobinSection data;
@@ -40,6 +38,11 @@ public class RobinConfiguration {
      */
     public RobinConfiguration() {
         this.fileName = null;
+
+        // Ensure data is initialized
+        if (data == null) {
+            data = new RobinSection(new HashMap<>());
+        }
     }
 
     /**
@@ -207,8 +210,8 @@ public class RobinConfiguration {
      * @param parameter parameter to get from the YAML file.
      * @return value of parameter if present.
      */
-    public List<Object> getList(String parameter) {
-        return data.getList(parameter);
+    public <T> List<T> getList(String parameter, Class<T> type) {
+        return data.getList(parameter, type);
     }
 
     /**
@@ -388,18 +391,28 @@ public class RobinConfiguration {
         }
 
         /**
-         * Gets a List from the specified location.
+         * Gets a typed List from the specified location.
          *
-         * @param parameter the path to the List.
-         * @return Value if parameter exists
+         * @param parameter Path to the List
+         * @param type      Class of the expected list elements (e.g., String.class)
+         * @return List of the specified type, empty if invalid/missing
          */
-        public List<Object> getList(String parameter) {
+        public <T> List<T> getList(String parameter, Class<T> type) {
             TraversalResult result = traverseGetPath(parameter);
-            if (result == null) return null;
+            if (result == null) return Collections.emptyList();
 
             Object value = result.parentMap.get(result.lastKey);
-            return value instanceof List ? (List<Object>) value : null;
+            if (!(value instanceof List<?> rawList)) {
+                return Collections.emptyList();
+            }
+
+            // Filter and cast elements to the specified type
+            return rawList.stream()
+                    .filter(type::isInstance)
+                    .map(type::cast)
+                    .collect(Collectors.toList());
         }
+
 
         /**
          * Gets an Object from the specified location.
