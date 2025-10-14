@@ -65,7 +65,9 @@ class RobinConfigurationTest {
     @Test
     void saveToString() throws InvalidConfigurationException {
         config.loadFromString("the: cat");
-        assertEquals("{the: cat}\n", config.saveToString());
+        String output = config.saveToString();
+        // Jackson 3 YAML format includes document marker and quotes
+        assertEquals("---\nthe: \"cat\"\n", output);
     }
 
     @Test

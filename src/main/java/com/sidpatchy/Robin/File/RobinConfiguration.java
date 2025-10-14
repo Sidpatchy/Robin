@@ -3,9 +3,11 @@ package com.sidpatchy.Robin.File;
 import com.sidpatchy.Robin.Exception.InvalidConfigurationException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.error.YAMLException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.yaml.YAMLFactory;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 import java.io.*;
 import java.net.URL;
@@ -17,7 +19,7 @@ public class RobinConfiguration {
     private RobinSection data;
     private String fileName;
 
-    private Yaml yaml = new Yaml();
+    private ObjectMapper mapper = YAMLMapper.builder().build();
     private static final Logger logger = LogManager.getLogger(RobinConfiguration.class);
 
     /**
@@ -54,9 +56,10 @@ public class RobinConfiguration {
         }
 
         try (FileInputStream fileInputStream = new FileInputStream(fileName)) {
-            data = new RobinSection(yaml.load(fileInputStream));
+            Map<String, Object> loadedData = mapper.readValue(fileInputStream, new TypeReference<Map<String, Object>>() {});
+            data = new RobinSection(loadedData);
         }
-        catch (YAMLException e) {
+        catch (JacksonException e) {
             throw new InvalidConfigurationException(e);
         }
         catch (IOException e) {
@@ -77,9 +80,10 @@ public class RobinConfiguration {
         }
 
         try {
-            data = new RobinSection(yaml.load(contents));
+            Map<String, Object> loadedData = mapper.readValue(contents, new TypeReference<Map<String, Object>>() {});
+            data = new RobinSection(loadedData);
         }
-        catch (YAMLException e) {
+        catch (JacksonException e) {
             throw new InvalidConfigurationException(e);
         }
     }
@@ -98,14 +102,14 @@ public class RobinConfiguration {
             url = new URL(link);
             reader = new InputStreamReader(url.openStream());
 
-            data = new RobinSection(yaml.load(reader));
+            Map<String, Object> loadedData = mapper.readValue(reader, new TypeReference<Map<String, Object>>() {});
+            data = new RobinSection(loadedData);
+        } catch (JacksonException e) {
+            throw new InvalidConfigurationException(e);
         } catch (IOException e) {
             logger.error(e);
             logger.error("Unable to read from " + link);
             throw new IOException("Failed GET from " + link);
-        }
-        catch (YAMLException e) {
-            throw new InvalidConfigurationException(e);
         }
 
     }
@@ -130,15 +134,16 @@ public class RobinConfiguration {
             uc.setRequestProperty("Authorization", basicAuth);
             reader = new InputStreamReader(uc.getInputStream());
 
-            data = new RobinSection(yaml.load(reader));
+            Map<String, Object> loadedData = mapper.readValue(reader, new TypeReference<Map<String, Object>>() {});
+            data = new RobinSection(loadedData);
+        }
+        catch (JacksonException e) {
+            throw new InvalidConfigurationException(e);
         }
         catch (IOException e) {
             logger.error(e);
             logger.error("Unable to read from " + link);
             throw new IOException("Failed GET from " + link);
-        }
-        catch (YAMLException e) {
-            throw new InvalidConfigurationException(e);
         }
     }
 
@@ -147,21 +152,22 @@ public class RobinConfiguration {
             throw new InvalidConfigurationException("A file must be specified");
         }
 
-        // Create DumperOptions with the required settings
-        DumperOptions dumperOptions = new DumperOptions();
-        dumperOptions.setPrettyFlow(true);
-        dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+        // Create YAMLMapper with configured factory for block style
+        YAMLFactory yamlFactory = YAMLFactory.builder().build();
+        ObjectMapper yamlMapper = YAMLMapper.builder(yamlFactory).build();
 
         FileWriter writer = new FileWriter(fileName);
-        Yaml yaml = new Yaml(dumperOptions);
-        yaml.dump(data.getSectionData(), writer);
+        yamlMapper.writeValue(writer, data.getSectionData());
         writer.close();
     }
 
     public String saveToString() {
-        StringWriter writer = new StringWriter();
-        yaml.dump(data.sectionData, writer);
-        return writer.toString();
+        try {
+            return mapper.writeValueAsString(data.sectionData);
+        } catch (JacksonException e) {
+            logger.error("Error converting to string", e);
+            return "";
+        }
     }
 
     /**

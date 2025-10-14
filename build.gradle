@@ -1,27 +1,26 @@
 plugins {
-    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'com.gradleup.shadow' version '9.2.2'
     id 'java'
     id 'maven-publish'
 }
 
-group 'com.sidpatchy'
-version '2.2.4'
+group = 'com.sidpatchy'
+version = '2.2.5'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:6.0.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:6.0.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:6.0.0'
 
-    implementation 'org.apache.logging.log4j:log4j-api:2.19.0'
-    implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
+    implementation 'org.apache.logging.log4j:log4j-api:2.25.2'
+    implementation 'org.apache.logging.log4j:log4j-core:2.25.2'
 
-    // Eventually SnakeYAML will be entirely moved away from
-    implementation 'org.yaml:snakeyaml:2.0'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.16.1'
+    implementation 'tools.jackson.dataformat:jackson-dataformat-xml:3.0.0'
+    implementation 'tools.jackson.dataformat:jackson-dataformat-yaml:3.0.0'
 }
 
 test {
@@ -35,10 +34,14 @@ publishing {
             artifact shadowJar // Fat JAR with dependencies
             artifact jar       // Standard JAR
 
-            groupId = project.group
+            groupId = 'com.github.Sidpatchy'
             artifactId = 'Robin'
             version = project.version
         }
+    }
+
+    repositories {
+        mavenLocal()
     }
 }
 

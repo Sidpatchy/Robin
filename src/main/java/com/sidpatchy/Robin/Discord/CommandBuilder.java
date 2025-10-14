@@ -1,6 +1,8 @@
 package com.sidpatchy.Robin.Discord;
 
-import org.yaml.snakeyaml.Yaml;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -16,6 +18,7 @@ import java.util.Scanner;
  */
 public class CommandBuilder {
     private Command command;
+    private static final ObjectMapper mapper = YAMLMapper.builder().build();
 
     /**
      * The CommandBuilder class is responsible for building a command object.
@@ -123,8 +126,11 @@ public class CommandBuilder {
      * @return the command builder instance
      */
     public CommandBuilder loadFromString(String yamlString) {
-        Yaml yaml = new Yaml();
-        command = yaml.loadAs(yamlString, Command.class);
+        try {
+            command = mapper.readValue(yamlString, Command.class);
+        } catch (JacksonException e) {
+            throw new RuntimeException("Failed to parse YAML command", e);
+        }
         return this;
     }
 

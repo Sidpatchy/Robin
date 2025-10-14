@@ -1,7 +1,7 @@
 package com.sidpatchy.Robin.Discord;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 import java.io.*;
 
@@ -17,7 +17,7 @@ public class CommandFactory {
      * @return An instance of the specified class filled with data from the YAML file.
      */
     public static <T> T loadConfig(String filePath, Class<T> configClass) throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper objectMapper = YAMLMapper.builder().build();
         return objectMapper.readValue(new File(filePath), configClass);
     }
 }
