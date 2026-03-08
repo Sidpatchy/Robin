@@ -34,7 +34,7 @@ publishing {
             artifact shadowJar // Fat JAR with dependencies
             artifact jar       // Standard JAR
 
-            groupId = 'com.Sidpatchy'
+            groupId = 'com.sidpatchy'
             artifactId = 'Robin'
             version = project.version
         }
@@ -46,8 +46,8 @@ publishing {
             name = "GitHubPackages"
             url = uri("https://maven.pkg.github.com/Sidpatchy/Robin")
             credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
+                username = System.getenv("USERNAME")
+                password = System.getenv("TOKEN")
             }
         }
     }
