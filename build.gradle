@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.sidpatchy'
-version = '2.2.6'
+version = '2.2.7'
 
 repositories {
     mavenCentral()
@@ -34,7 +34,7 @@ publishing {
             artifact shadowJar // Fat JAR with dependencies
             artifact jar       // Standard JAR
 
-            groupId = 'com.github.Sidpatchy'
+            groupId = 'com.Sidpatchy'
             artifactId = 'Robin'
             version = project.version
         }
