@@ -35,7 +35,7 @@ publishing {
             artifact jar       // Standard JAR
 
             groupId = 'com.sidpatchy'
-            artifactId = 'Robin'
+            artifactId = 'robin'
             version = project.version
         }
     }
